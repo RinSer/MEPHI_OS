@@ -4,6 +4,7 @@ THIS_NAME=$0
 FILE_PATH=$1
 LINE_COUNT=$2
 NUM_ARGS=$#
+STTY_INIT=$(stty -g)
 
 # Отобразить пример вызова
 usage() {
@@ -12,7 +13,8 @@ usage() {
 
 # Функция для освобождения реcурсов после исполнения
 clean_up() {
-        stty echo && exit $1
+        trap - SIGTSTP SIGQUIT SIGINT
+        stty $STTY_INIT && exit $1
 }
 
 # Отобразить сообщение об ошибке и закончить
@@ -46,9 +48,7 @@ check_file_exists_and_writable() {
 # Ожидание команды завершения
 wait_finish() {
         echo "Нажмите <ctrl+Y>, чтобы завершить работу"
-        stty_init=$(stty -g)
-        stty susp ^y
-        trap "stty ${stty_init} && clean_up 0" SIGTSTP
+        stty susp ^y && trap "clean_up 0" SIGTSTP
 }
 
 # Ожидание интерактивного ввода пути к второму файлу
@@ -79,10 +79,8 @@ cut_second_file() {
 start_procedure() {
         check_arguments
         check_file_exists_and_writable $FILE_PATH
-
-        echo "Нежмите <ctrl+\> чтобы удалить $LINE_COUNT строк из файла $FILE_PATH"
-        stty -echo
-        trap cut_first_file SIGQUIT
+        echo "Нежмите <ctrl+\>, чтобы удалить $LINE_COUNT строк из файла $FILE_PATH"
+        stty -echo && trap cut_first_file SIGQUIT
         while true; do true; done
 }
 
