@@ -37,10 +37,10 @@ check_arguments() {
 
 # Валидация существования файла и наличия прав на запись
 check_file_exists_and_writable() {
-        if ! [ -r $1 ]; then
+        if ! [ -r "$1" ]; then
                 error_exit "Не возможно прочитать файл $1!"
         fi
-        if ! [ -w $1 ]; then
+        if ! [ -w "$1" ]; then
                 error_exit "Не возможно изменять файл $1!"
         fi
 }
@@ -55,7 +55,7 @@ wait_finish() {
 wait_second_file() {
         stty echo
         read -p "Введите путь до второго файла: " FILE_PATH
-        check_file_exists_and_writable $FILE_PATH
+        check_file_exists_and_writable "$FILE_PATH"
         echo "Нажмите <ctrl+C>, чтобы удалить первую и последнюю строки файла $FILE_PATH"
         stty -echo
         trap cut_second_file SIGINT
@@ -64,21 +64,21 @@ wait_second_file() {
 # Удаление строк из файла, переданного как параметр
 cut_first_file() {
         trap - SIGQUIT
-        sed -i -e "1,${LINE_COUNT}d" $FILE_PATH
+        sed -i -e "1,${LINE_COUNT}d" "$FILE_PATH"
         wait_second_file
 }
 
 # Удаление первой и последней строки второго файла
 cut_second_file() {
         trap - SIGINT
-        sed -i -e "1,1d; $,1d" $FILE_PATH
+        sed -i -e "1,1d; $,1d" "$FILE_PATH"
         wait_finish
 }
 
 # Логика начала процедуры
 start_procedure() {
         check_arguments
-        check_file_exists_and_writable $FILE_PATH
+        check_file_exists_and_writable "$FILE_PATH"
         echo "Нежмите <ctrl+\>, чтобы удалить $LINE_COUNT строк из файла $FILE_PATH"
         stty -echo && trap cut_first_file SIGQUIT
         while true; do true; done
